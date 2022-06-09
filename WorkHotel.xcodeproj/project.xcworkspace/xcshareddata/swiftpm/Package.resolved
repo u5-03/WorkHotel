@@ -1,0 +1,23 @@
+{
+  "pins" : [
+    {
+      "identity" : "alamofire",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/Alamofire/Alamofire",
+      "state" : {
+        "revision" : "354dda32d89fc8cd4f5c46487f64957d355f53d8",
+        "version" : "5.6.1"
+      }
+    },
+    {
+      "identity" : "swiftextensions",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/u5-03/SwiftExtensions",
+      "state" : {
+        "revision" : "6d5905622cef57cb7aaa39785930b7fb4e9976c7",
+        "version" : "1.0.0"
+      }
+    }
+  ],
+  "version" : 2
+}
