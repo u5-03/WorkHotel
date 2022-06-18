@@ -8,7 +8,10 @@
 import Foundation
 
 public struct WorkHotelMock: WorkHotelProtocol {
+    public init() {}
+
     public func fetchVacantHotels(parameters: VacantHotelSearchParameter) async throws -> VacantHotelSearchResponse {
+        print("URL: Mock request")
         return VacantHotelSearchResponse(
             pagingInfo: .init(recordCount: 1, pageCount: 1, page: 1, first: 1, last: 1),
             hotels: [

@@ -11,17 +11,72 @@ import WorkHotelCore
 import Combine
 import CoreLocation
 
+struct MapViewParameter {
+    let mapActionType: MapActionType
+    let centerCoordinate: CLLocationCoordinate2D
+    let selectedCoordinate: CLLocationCoordinate2D
+    let locations: [CLLocationCoordinate2D]
+}
+
+enum MapActionType: Equatable {
+    case selectPin(coordinate: CLLocationCoordinate2D)
+    case didSwipeCarousel(index: Int)
+    case didSearchLocation(coordinate: CLLocationCoordinate2D)
+    case didStartDrag(coordinate: CLLocationCoordinate2D)
+    case goToCurrentLocation(centerCoordinate: CLLocationCoordinate2D)
+    case pageOpen
+    
+    fileprivate var isSearchHotelsEnable: Bool {
+        switch self {
+        case .selectPin, .didSwipeCarousel:
+            return false
+        case .didSearchLocation, .goToCurrentLocation, .pageOpen, .didStartDrag:
+            return true
+        }
+    }
+
+    fileprivate var shouldMoveCenterCoordinate: Bool {
+        switch self {
+        case .selectPin, .didSwipeCarousel:
+            return false
+        case .didSearchLocation, .goToCurrentLocation, .pageOpen, .didStartDrag:
+            return true
+        }
+    }
+
+    fileprivate var isCenterCoordinatePreset: Bool {
+        switch self {
+        case .selectPin, .didSwipeCarousel, .didStartDrag, .pageOpen:
+            return false
+        case .didSearchLocation, .goToCurrentLocation:
+            return true
+        }
+    }
+}
+
 @MainActor
 final class WorkHotelMapViewModel: NSObject, ObservableObject {
-    @Published var selectedIndex = 0
-    @Published var selectedCoordinate = WorkHotelCommon.defaultCoordinate
-    @Published var willSearchCoordinate = WorkHotelCommon.defaultCoordinate
-    @Published var centerCoordinate = WorkHotelCommon.defaultCoordinate
+    
+    @Published var selectedIndex = 0 {
+        didSet {
+            print("DidSet: selectedIndex \(selectedIndex)")
+        }
+    }
+    @Published private(set) var centerCoordinate = WorkHotelCommon.defaultCoordinate
     @Published var searchParameter = VacantHotelSearchParameter()
-    @Published private(set) var hotelList: [VacantHotelSearchBasicInfoResponse] = []
-    @Published var isLoading = false
+    @Published private(set) var hotelList: [VacantHotelSearchBasicInfoResponse] = [] {
+        didSet {
+            if !hotelList.isEmpty {
+                selectedIndex = 0
+            }
+        }
+    }
+    @Published private(set) var isLoading = false
     @Published var searchText = ""
     @Published var shouldShowErrorAlert = false
+    @Published var mapActionType: MapActionType = .pageOpen
+    @Published var didEndMapScrollAnimation = WorkHotelCommon.defaultCoordinate
+    @Published private var fetchTask: Task<(), Never>?
     @Published var shouldShowSearchOption = false {
         didSet {
             if !shouldShowSearchOption, shouldShowSearchOption != oldValue {
@@ -45,81 +100,112 @@ final class WorkHotelMapViewModel: NSObject, ObservableObject {
         self.repository = repository
         super.init()
 
-        $selectedCoordinate
-            .removeDuplicates()
-            .sink { [weak self] selectedCoordinate in
-                guard let self = self,
-                      let selectedIndex = self.hotelList.map(\.coordinate).firstIndex(where: { $0 == selectedCoordinate }) else { return }
-                self.selectedIndex = selectedIndex
-            }
-            .store(in: &cancellableSet)
         $selectedIndex
             .removeDuplicates()
             .sink { [weak self] selectedIndex in
-                guard let self = self, !self.hotelList.isEmpty else { return }
-                self.selectedCoordinate = self.hotelList.map(\.coordinate)[selectedIndex]
-                if selectedIndex != 0 {
-                    self.centerCoordinate = self.selectedCoordinate
+                guard let self = self else { return }
+                self.mapActionType = .didSwipeCarousel(index: selectedIndex)
+            }
+            .store(in: &cancellableSet)
+        $didEndMapScrollAnimation
+            .removeDuplicates()
+            .filter({ $0 != WorkHotelCommon.defaultCoordinate })
+            .debounce(for: 1, scheduler: RunLoop.main)
+            .sink { centerCoordinate in
+                if self.mapActionType.isSearchHotelsEnable,
+                   (self.mapActionType.isCenterCoordinatePreset || self.centerCoordinate.roughRoundedCoordinate != centerCoordinate.roughRoundedCoordinate) {
+                    self.searchParameter.coordinater = centerCoordinate
+                    self.fetchTask?.cancel()
+                    self.fetchTask = Task {
+                        await self.fetchVacantHotelList(shouldSwitchLoading: false)
+                    }
+                }
+                if self.mapActionType.shouldMoveCenterCoordinate,
+                   self.centerCoordinate != centerCoordinate {
+//                    self.centerCoordinate = centerCoordinate
                 }
             }
             .store(in: &cancellableSet)
-        $willSearchCoordinate
-            //  Skip default first value
-            .dropFirst()
+        $mapActionType
             .removeDuplicates()
-            .debounce(for: 0.5, scheduler: RunLoop.main)
-            .sink { [weak self] centerCoordinate in
+            .sink { [weak self] actionType in
                 guard let self = self else { return }
-                Task {
-                    await self.fetchVacantHotelList(shouldSwitchLoading: false)
+                print("MapAction: \(actionType)")
+                switch actionType {
+                case .selectPin(let coordinate):
+                    guard let selectedIndex = self.hotelList.map(\.coordinate).firstIndex(where: { $0 == coordinate }) else { return }
+                    if self.selectedIndex != selectedIndex {
+                        self.selectedIndex = selectedIndex
+                        self.centerCoordinate = coordinate
+                    }
+                case .didSwipeCarousel(let selectedIndex):
+                    guard !self.hotelList.isEmpty else { return }
+                    let selectedCoordinate = self.hotelList.map(\.coordinate)[selectedIndex]
+                    if self.centerCoordinate != selectedCoordinate {
+                        self.centerCoordinate = selectedCoordinate
+                        self.selectedIndex = selectedIndex
+                    }
+                    if selectedIndex != 0 {
+                    }
+                case .didStartDrag:
+                    break
+                case .goToCurrentLocation(let coordinate):
+                    self.centerCoordinate = coordinate
+                case .didSearchLocation(let coordinate):
+                    self.centerCoordinate = coordinate
+                case .pageOpen:
+                    self.fetchTask = Task {
+//                        await self.fetchVacantHotelList()
+                    }
+
                 }
             }
             .store(in: &cancellableSet)
         $searchText
             .filter({ !$0.trim().isEmpty })
-            .debounce(for: 0.5, scheduler: RunLoop.main)
+            .debounce(for: 1, scheduler: RunLoop.main)
             .removeDuplicates()
             .sink { [weak self] searchText in
                 self?.searchLocation(keyword: searchText)
             }
             .store(in: &cancellableSet)
         locationManager.$userLocation
-            .dropFirst()
+            .debounce(for: 0.5, scheduler: RunLoop.main)
             .sink { [weak self] coordinate in
-                self?.changeCenterPosition(to: coordinate)
+//                if coordinate == WorkHotelCommon.defaultCoordinate { return }
+                self?.mapActionType = .goToCurrentLocation(centerCoordinate: coordinate)
+                self?.fetchTask = Task {
+                    await self?.fetchVacantHotelList()
+                }
             }
             .store(in: &cancellableSet)
     }
 
-    func fetchVacantHotelList(shouldSwitchLoading: Bool = true) async {
+    private func fetchVacantHotelList(shouldSwitchLoading: Bool = true) async {
         if shouldSwitchLoading {
             isLoading = true
         }
         do {
             searchParameter.coordinater = centerCoordinate
             let response = try await repository.fetchVacantHotels(parameters: searchParameter)
-            selectedIndex = 0
             hotelList = response.hotels.flatMap({ $0.hotel.compactMap(\.hotelBacisInfo) }).sorted(by: searchParameter.coordinater.location)
         } catch {
-            if let error = error as? WorkHotelError {
-                if error.shouldShowErrorAlert {
-                    self.error = error
+            if !Task.isCancelled  {
+                if let error = error as? WorkHotelError {
+                    if error.shouldShowErrorAlert {
+                        self.error = error
+                    }
+                } else {
+                    self.error = .unknown
                 }
-            } else {
-                self.error = .unknown
+                hotelList = []
             }
-            hotelList = []
         }
         isLoading = false
     }
 
-    func changeCenterPosition(to coordinate: CLLocationCoordinate2D) {
-        centerCoordinate = coordinate
-        searchParameter.coordinater = coordinate
-        willSearchCoordinate = coordinate
-        Task {
-            await fetchVacantHotelList(shouldSwitchLoading: false)
-        }
+    func gotoCurrentLocation() {
+        mapActionType = .goToCurrentLocation(centerCoordinate: locationManager.userLocation)
     }
 
     private func searchLocation(keyword: String) {
@@ -128,8 +214,7 @@ final class WorkHotelMapViewModel: NSObject, ObservableObject {
             if let placemarks = placemarks,
                 !placemarks.isEmpty,
                let coordinate = placemarks.first?.location?.coordinate {
-                self?.centerCoordinate = coordinate
-                self?.willSearchCoordinate = coordinate
+                self?.mapActionType = .didSearchLocation(coordinate: coordinate)
             } else {
                 self?.error = WorkHotelError.failedToFindLocationFromKeyword
             }

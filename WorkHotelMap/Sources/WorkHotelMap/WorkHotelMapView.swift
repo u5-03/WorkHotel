@@ -13,7 +13,7 @@ import WorkHotelSearchOption
 @MainActor
 public struct WorkHotelMapView: View {
     // WorkHotelRepository or WorkHotelMock
-    @StateObject private var viewModel = WorkHotelMapViewModel(repository: WorkHotelRepository())
+    @StateObject private var viewModel = WorkHotelMapViewModel(repository: WorkHotelMock())
 
     public init() {}
 
@@ -36,15 +36,16 @@ public struct WorkHotelMapView: View {
                     EmptyView()
                 }
                 MapContentView(
-                    selectedCoordinate: $viewModel.selectedCoordinate,
-                    centerCoordinate: $viewModel.centerCoordinate,
-                    willSearchCoordinate: $viewModel.willSearchCoordinate,
+                    mapActionType: $viewModel.mapActionType,
+                    didEndMapScrollAnimation: $viewModel.didEndMapScrollAnimation,
+                    selectedIndex: viewModel.selectedIndex,
+                    centerCoordinate: viewModel.centerCoordinate,
                     locations: viewModel.hotelList.map(\.coordinate))
                 VStack {
                     Spacer()
                     HStack {
                         Button {
-                            viewModel.changeCenterPosition(to: viewModel.locationManager.userLocation)
+                            viewModel.gotoCurrentLocation()
                         } label: {
                             Image(systemName: "location.fill")
                                 .resizable()
@@ -96,7 +97,7 @@ public struct WorkHotelMapView: View {
             WorkHotelSearchOptionView(parameter: $viewModel.searchParameter)
         }
         .task {
-            await viewModel.fetchVacantHotelList()
+            viewModel.mapActionType = .pageOpen
         }
     }
 }

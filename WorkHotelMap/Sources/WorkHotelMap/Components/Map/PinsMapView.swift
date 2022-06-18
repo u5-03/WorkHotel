@@ -10,26 +10,27 @@ import SwiftUI
 import MapKit
 import WorkHotelCore
 
-protocol MapDragDelegate: AnyObject {
-    func didEndDrag(centerCoordinate: CLLocationCoordinate2D)
+protocol MapViewDelegate: AnyObject {
+    func didChangeDisableNotifySelectionPin(disableNotifySelectionPin: Bool) -> Void
+    func didStartDrag(centerCoordinate: CLLocationCoordinate2D)
 }
 
 final class PinsMapView: UIView {
     private(set) lazy var mapView = MKMapView()
-    weak var delegate: MapDragDelegate?
+    weak var delegate: MapViewDelegate?
 
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
     }
 
-    override init(frame: CGRect) {
+    init(frame: CGRect = .zero, centerCoordinate: CLLocationCoordinate2D) {
         super.init(frame: frame)
         addSubview(mapView)
 
-        setCenter(coordinator: WorkHotelCommon.defaultCoordinate, shouldAdjustRegion: true)
+        setCenter(coordinator: centerCoordinate, shouldAdjustRegion: true, animated: false)
         // Show current user positin in map
         mapView.setUserTrackingMode(.follow, animated: true)
-        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didEndDrag(_:)))
+        let panGesture = UIPanGestureRecognizer(target: self, action: #selector(didChangeDrag(_:)))
         panGesture.minimumNumberOfTouches = 1
         panGesture.delegate = self
         mapView.addGestureRecognizer(panGesture)
@@ -39,9 +40,9 @@ final class PinsMapView: UIView {
         mapView.frame = CGRect(x: 0, y: 0, width: bounds.width, height: bounds.height)
     }
 
-    @objc private func didEndDrag(_ sender: UIPanGestureRecognizer) {
-        if sender.state == .ended {
-            delegate?.didEndDrag(centerCoordinate: mapView.centerCoordinate)
+    @objc private func didChangeDrag(_ sender: UIPanGestureRecognizer) {
+        if sender.state == .began {
+            delegate?.didStartDrag(centerCoordinate: mapView.centerCoordinate)
         }
     }
 
@@ -50,15 +51,15 @@ final class PinsMapView: UIView {
     }
 
     func clearAnnotations() {
-        self.mapView.removeAnnotations(self.mapView.annotations)
+        mapView.removeAnnotations(mapView.annotations)
     }
 
-    func setCenter(coordinator: CLLocationCoordinate2D, shouldAdjustRegion: Bool = false) {
+    func setCenter(coordinator: CLLocationCoordinate2D, shouldAdjustRegion: Bool = false, animated: Bool) {
         // Add animation, `animated` option of `setCenter` not working somehow
-        UIView.animate(withDuration: 0.3) {
+        UIView.execute(isAnimated: animated, withDuration: 0.3) {
             self.mapView.setCenter(coordinator, animated: true)
             if shouldAdjustRegion {
-                let defaultSpan: MKCoordinateSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
+                let defaultSpan = MKCoordinateSpan(latitudeDelta: 0.1, longitudeDelta: 0.1)
                 let defaultRegion = MKCoordinateRegion(center: coordinator, span: defaultSpan)
                 self.mapView.region = defaultRegion
             }
@@ -66,7 +67,10 @@ final class PinsMapView: UIView {
     }
 
     func selectPin(coordinator: CLLocationCoordinate2D) {
-        guard let annotation = mapView.annotations.first(where: { $0.coordinate == coordinator }) else { return }
+        guard let annotation = mapView.annotations.first(where: { $0.coordinate == coordinator }),
+              mapView.selectedAnnotations.first?.coordinate != annotation.coordinate else { return }
+
+        delegate?.didChangeDisableNotifySelectionPin(disableNotifySelectionPin: true)
         mapView.selectAnnotation(annotation, animated: true)
     }
 }

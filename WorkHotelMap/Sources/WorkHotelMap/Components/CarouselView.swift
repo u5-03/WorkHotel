@@ -96,7 +96,7 @@ struct CarouselView: View {
                         } else if newIndex > (hotelList.count - 1) {
                             newIndex = hotelList.count - 1
                         }
-                        $currentIndex.wrappedValue = newIndex
+                        currentIndex = newIndex
                     })
             )
             .animation(.interpolatingSpring(mass: 0.6, stiffness: 150, damping: 80, initialVelocity: 0.1), value: UUID())

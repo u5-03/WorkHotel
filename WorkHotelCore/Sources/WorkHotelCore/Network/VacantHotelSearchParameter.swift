@@ -36,7 +36,7 @@ public struct VacantHotelSearchParameter {
     private let searchRadius = 2.5
     public var checkinDate = Date()
     public var checkoutDate = Date().offsetDays(offset: 1) ?? Date()
-    public var coordinater: CLLocationCoordinate2D = WorkHotelCommon.defaultCoordinate
+    public var coordinater = WorkHotelCommon.defaultCoordinate
     public var adultNum = 1
     public var roomNum = 1
     public var maxCharge: Double = 30_000

@@ -12,7 +12,7 @@
 		6821ED6E284FC58300D3256E /* WorkHotelApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6821ED65284FC58300D3256E /* WorkHotelApp.swift */; };
 		6821ED6F284FC58300D3256E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6821ED66284FC58300D3256E /* ContentView.swift */; };
 		6821ED7A284FC6E600D3256E /* WorkHotelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6821ED79284FC6E600D3256E /* WorkHotelTests.swift */; };
-		68DEE6D32851103E001B2967 /* WorkHotelMap in Frameworks */ = {isa = PBXBuildFile; productRef = 68DEE6D22851103E001B2967 /* WorkHotelMap */; };
+		68F2F2232858C7F60020533D /* WorkHotelMap in Frameworks */ = {isa = PBXBuildFile; productRef = 68F2F2222858C7F60020533D /* WorkHotelMap */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,10 +33,10 @@
 		6821ED66284FC58300D3256E /* ContentView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		6821ED77284FC6E600D3256E /* WorkHotelTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WorkHotelTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		6821ED79284FC6E600D3256E /* WorkHotelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkHotelTests.swift; sourceTree = "<group>"; };
-		684159C62851FA2200FBBC6B /* WorkHotelCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelCore; sourceTree = "<group>"; };
-		684159C72851FA2D00FBBC6B /* WorkHotelDetail */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelDetail; sourceTree = "<group>"; };
-		684159C82851FA3500FBBC6B /* WorkHotelMap */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelMap; sourceTree = "<group>"; };
-		684159C92851FA4000FBBC6B /* WorkHotelSearchOption */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelSearchOption; sourceTree = "<group>"; };
+		68F2F21E2858C7CA0020533D /* WorkHotelCore */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelCore; sourceTree = "<group>"; };
+		68F2F21F2858C7D50020533D /* WorkHotelDetail */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelDetail; sourceTree = "<group>"; };
+		68F2F2202858C7DF0020533D /* WorkHotelMap */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelMap; sourceTree = "<group>"; };
+		68F2F2212858C7E90020533D /* WorkHotelSearchOption */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = WorkHotelSearchOption; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -44,7 +44,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				68DEE6D32851103E001B2967 /* WorkHotelMap in Frameworks */,
+				68F2F2232858C7F60020533D /* WorkHotelMap in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,10 +108,10 @@
 		6821ED80284FC7C800D3256E /* Packages */ = {
 			isa = PBXGroup;
 			children = (
-				684159C62851FA2200FBBC6B /* WorkHotelCore */,
-				684159C72851FA2D00FBBC6B /* WorkHotelDetail */,
-				684159C82851FA3500FBBC6B /* WorkHotelMap */,
-				684159C92851FA4000FBBC6B /* WorkHotelSearchOption */,
+				68F2F21E2858C7CA0020533D /* WorkHotelCore */,
+				68F2F21F2858C7D50020533D /* WorkHotelDetail */,
+				68F2F2202858C7DF0020533D /* WorkHotelMap */,
+				68F2F2212858C7E90020533D /* WorkHotelSearchOption */,
 			);
 			name = Packages;
 			sourceTree = "<group>";
@@ -140,7 +140,7 @@
 			);
 			name = WorkHotel;
 			packageProductDependencies = (
-				68DEE6D22851103E001B2967 /* WorkHotelMap */,
+				68F2F2222858C7F60020533D /* WorkHotelMap */,
 			);
 			productName = WorkHotel;
 			productReference = 6821ED0F284FC04100D3256E /* WorkHotel.app */;
@@ -495,7 +495,7 @@
 /* End XCConfigurationList section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		68DEE6D22851103E001B2967 /* WorkHotelMap */ = {
+		68F2F2222858C7F60020533D /* WorkHotelMap */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = WorkHotelMap;
 		};

@@ -16,7 +16,7 @@ public struct WorkHotelRepository: WorkHotelProtocol {
               let urlRequest = try? URLRequest(url: url, method: .get) else {
             throw WorkHotelError.invalidRequestURL
         }
-
+        print("URL: \(url)")
         return try await WorkHotelNetwork.shared.sendRequest(request: urlRequest)
     }
 }

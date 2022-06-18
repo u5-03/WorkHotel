@@ -121,8 +121,7 @@ public enum VacantHotelSearchHotelContentResponse: Decodable {
     }
 }
 
-public struct VacantHotelSearchBasicInfoResponse: Decodable, Identifiable {
-    public let id = UUID()
+public struct VacantHotelSearchBasicInfoResponse: Decodable {
     public let hotelNo: Int
     public let hotelName: String
     public let hotelKanaName: String?
